@@ -178,7 +178,7 @@ namespace AZ
             // Stage profile name parameter
             // Note: RayTracing shaders must be compiled with version 6_3, while the rest of the stages
             // are compiled with version 6_2, so RayTracing cannot share the version constant.
-            const AZStd::string shaderModelVersion = "6_2";
+            const AZStd::string shaderModelVersion = "6_6";
             const AZStd::unordered_map<RHI::ShaderHardwareStage, AZStd::string> stageToProfileName =
             {
                 {RHI::ShaderHardwareStage::Vertex,                 "vs_" + shaderModelVersion},
@@ -225,7 +225,7 @@ namespace AZ
                 RHI::ShaderBuildArguments::AppendArguments(dxcArguments, { "-fvk-invert-y" });
                 break;
             case RHI::ShaderHardwareStage::Fragment:
-                RHI::ShaderBuildArguments::AppendArguments(dxcArguments, { "-fvk-use-dx-position-w"});
+                RHI::ShaderBuildArguments::AppendArguments(dxcArguments, { "-fvk-use-dx-position-w" });
                 break;
             case RHI::ShaderHardwareStage::Compute:
             case RHI::ShaderHardwareStage::RayTracing:
@@ -263,12 +263,12 @@ namespace AZ
             //                                                    |   2.SM  |   4.output       |      |
             //                                                    |     |   |       |          |      |
             const auto dxcCommandOptions = AZStd::string::format("%s -T %s %s -Fo \"%s\" -Fh \"%s\" \"%s\"",
-                                                                 dxcEntryPoint.c_str(),                  // 1
-                                                                 profileIt->second.c_str(),              // 2
-                                                                 params.c_str(),                         // 3
-                                                                 shaderOutputFile.c_str(),               // 4
-                                                                 objectCodeOutputFile.c_str(),           // 5
-                                                                 dxcInputFile.c_str());                  // 6
+                dxcEntryPoint.c_str(),                  // 1
+                profileIt->second.c_str(),              // 2
+                params.c_str(),                         // 3
+                shaderOutputFile.c_str(),               // 4
+                objectCodeOutputFile.c_str(),           // 5
+                dxcInputFile.c_str());                  // 6
             // note: unlike DX12, the -Fd switch fails with -spirv. waiting for an answer on https://github.com/microsoft/DirectXShaderCompiler/issues/3111
             //       therefore, the debug data is probably embedded in the spirv blob.
 

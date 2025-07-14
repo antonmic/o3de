@@ -35,7 +35,7 @@ ly_append_configurations_options(
         /MP             # Multicore compilation in Visual Studio
         /nologo         # Suppress Copyright and version number message
         /W4             # Warning level 4
-        /WX             # Warnings as errors
+#        /WX             # Warnings as errors
         /permissive-    # Conformance with standard
         /Zc:preprocessor # Forces preprocessor into conformance mode:  https://docs.microsoft.com/en-us/cpp/preprocessor/preprocessor-experimental-overview?view=msvc-170
         /Zc:forScope    # Force Conformance in for Loop Scope

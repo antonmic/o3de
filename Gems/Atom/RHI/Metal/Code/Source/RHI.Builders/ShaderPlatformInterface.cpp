@@ -250,7 +250,7 @@ namespace AZ
             AZStd::string shaderMSLOutputFile = RHI::BuildFileNameWithExtension(shaderSourceFile, tempFolder, "metal");
 
             // Stage profile name parameter
-            const AZStd::string shaderModelVersion = "6_2";
+            const AZStd::string shaderModelVersion = "6_6";
 
             const AZStd::unordered_map<RHI::ShaderHardwareStage, AZStd::string> stageToProfileName =
             {

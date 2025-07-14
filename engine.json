@@ -15,6 +15,9 @@
     "copyright_year": 2023,
     "build": 0,
     "external_subdirectories": [
+        "D:/git/hair/TraverseHair",
+        "D:/git/o3de-extras/Gems/XR",
+        "D:/git/o3de-extras/Gems/OpenXRVk",
         "Gems/Achievements",
         "Gems/Archive",
         "Gems/AssetValidation",

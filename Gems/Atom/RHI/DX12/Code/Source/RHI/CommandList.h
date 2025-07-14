@@ -227,7 +227,7 @@ namespace AZ
                 const RHI::DevicePipelineState* m_pipelineState = nullptr;
 
                 // Graphics-specific state
-                AZStd::array<uint64_t, RHI::Limits::Pipeline::StreamCountMax> m_streamBufferHashes = {{}};
+                AZStd::array<uint64_t, RHI::Limits::Pipeline::StreamCountMax> m_streamBufferHashes = { {} };
                 uint64_t m_indexBufferHash = 0;
                 uint32_t m_stencilRef = static_cast<uint32_t>(-1);
                 RHI::PrimitiveTopology m_topology = RHI::PrimitiveTopology::Undefined;
@@ -275,19 +275,19 @@ namespace AZ
             ShaderResourceBindings& bindings = GetShaderResourceBindingsByPipelineType(pipelineType);
 
             const PipelineState* pipelineState = static_cast<const PipelineState*>(item.m_pipelineState);
-            if(!pipelineState)
+            if (!pipelineState)
             {
                 AZ_Assert(false, "Pipeline state not provided");
                 return false;
             }
-            
+
             const PipelineLayout* pipelineLayout = pipelineState->GetPipelineLayout();
             if (!pipelineLayout)
             {
                 AZ_Assert(false, "Pipeline layout is null.");
                 return false;
             }
-            
+
             bool updatePipelineState = m_state.m_pipelineState != pipelineState;
             // The pipeline state gets set first.
             if (updatePipelineState)
@@ -395,17 +395,17 @@ namespace AZ
                     switch (pipelineType)
                     {
                     case RHI::PipelineStateType::Draw:
-                        {
-                            GetCommandList()->SetGraphicsRootDescriptorTable(
-                                binding.m_bindlessTable.GetIndex(), m_descriptorContext->GetBindlessGpuPlatformHandle());
-                            break;
-                        }
+                    {
+                        GetCommandList()->SetGraphicsRootDescriptorTable(
+                            binding.m_bindlessTable.GetIndex(), m_descriptorContext->GetBindlessGpuPlatformHandle());
+                        break;
+                    }
                     case RHI::PipelineStateType::Dispatch:
-                        {
-                            GetCommandList()->SetComputeRootDescriptorTable(
-                                binding.m_bindlessTable.GetIndex(), m_descriptorContext->GetBindlessGpuPlatformHandle());
-                            break;
-                        }
+                    {
+                        GetCommandList()->SetComputeRootDescriptorTable(
+                            binding.m_bindlessTable.GetIndex(), m_descriptorContext->GetBindlessGpuPlatformHandle());
+                        break;
+                    }
                     default:
                         AZ_Assert(false, "Invalid PipelineType");
                         break;
@@ -413,7 +413,7 @@ namespace AZ
                     bindings.m_bindlessHeapLastIndex = binding.m_bindlessTable.GetIndex();
                     continue;
                 }
-                
+
                 if (AZ::RHI::Validation::IsEnabled())
                 {
                     if (!shaderResourceGroup)
@@ -469,9 +469,9 @@ namespace AZ
                             GetCommandList()->SetGraphicsRootDescriptorTable(binding.m_samplerTable.GetIndex(), compiledData.m_gpuSamplersDescriptorHandle);
                         }
 
-                        
+
                         for (uint32_t unboundedArrayIndex = 0; unboundedArrayIndex < ShaderResourceGroupCompiledData::MaxUnboundedArrays;
-                             ++unboundedArrayIndex)
+                            ++unboundedArrayIndex)
                         {
                             if (binding.m_bindlessTable.IsValid() &&
                                 compiledData.m_gpuUnboundedArraysDescriptorHandles[unboundedArrayIndex].ptr)
@@ -481,7 +481,7 @@ namespace AZ
                                     compiledData.m_gpuUnboundedArraysDescriptorHandles[unboundedArrayIndex]);
                             }
                         }
-                        
+
                         break;
 
                     case RHI::PipelineStateType::Dispatch:
@@ -501,7 +501,7 @@ namespace AZ
                         }
 
                         for (uint32_t unboundedArrayIndex = 0; unboundedArrayIndex < ShaderResourceGroupCompiledData::MaxUnboundedArrays;
-                             ++unboundedArrayIndex)
+                            ++unboundedArrayIndex)
                         {
                             if (binding.m_bindlessTable.IsValid() &&
                                 compiledData.m_gpuUnboundedArraysDescriptorHandles[unboundedArrayIndex].ptr)
