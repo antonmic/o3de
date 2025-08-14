@@ -292,16 +292,7 @@ namespace AZ
                 rayTracingPipelineFeatures.rayTracingPipeline = physicalDevice.GetPhysicalDeviceRayTracingPipelineFeatures().rayTracingPipeline;
                 rayTracingPipelineFeatures.rayTracingPipelineTraceRaysIndirect = physicalDevice.GetPhysicalDeviceRayTracingPipelineFeatures().rayTracingPipelineTraceRaysIndirect;
 
-                // https://github.com/o3de/o3de/issues/18433#issuecomment-3136575512
-                AppendVkStruct(chainInit, &vulkan12Features);
-                if (physicalDevice.IsOptionalDeviceExtensionSupported(OptionalDeviceExtension::AccelerationStructure))
-                {
-                    AppendVkStruct(chainInit, &accelerationStructureFeatures);
-                }
-                if (physicalDevice.IsOptionalDeviceExtensionSupported(OptionalDeviceExtension::RayTracingPipeline))
-                {
-                    AppendVkStruct(chainInit, &rayTracingPipelineFeatures);
-                }
+                AppendVkStruct(chainInit, { &vulkan12Features, &accelerationStructureFeatures, &rayTracingPipelineFeatures });
                 // Do not start from the chainInit, but from the depthClipEnabled struct
                 deviceInfo.pNext = &depthClipEnabled;
             }
