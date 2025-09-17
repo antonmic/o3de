@@ -106,7 +106,11 @@ namespace AZ
                 void SetWindowResolution();
 
                 //! Run the BRDF pipeline to generate the BRDF texture
-                void RunBRDFPipeline(AZ::RPI::ScenePtr scene, AZ::RPI::ViewportContextPtr viewportContext);
+                void RunBRDFPipeline(AZ::RPI::ScenePtr scene);
+                bool AddNonWindowPipeline(AZ::RPI::ScenePtr scene, AZStd::string_view pipelineAsset, bool executeOnce, bool uniquePipeline);
+                bool AddNonWindowPipeline(AZ::RPI::ScenePtr scene, AZStd::string_view pipelineName, AZStd::string_view pipelinePassTemplate, bool executeOnce, bool uniquePipeline);
+                bool AddNonWindowPipeline(AZ::RPI::ScenePtr scene, RPI::RenderPipelineDescriptor pipelineDesc, bool uniquePipeline);
+                bool AddNonWindowPipeline(AZ::RPI::ScenePtr scene, RPI::RenderPipelineDescriptor pipelineDesc, int deviceIndex);
 
                 //! Load a render pipeline from disk and add it to the scene
                 RPI::RenderPipelinePtr LoadPipeline(

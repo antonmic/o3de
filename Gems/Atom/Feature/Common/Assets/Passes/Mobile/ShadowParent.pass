@@ -20,11 +20,6 @@
                 {
                     "Name": "ProjectedShadowmap",
                     "SlotType": "Output"
-                },
-                // SwapChain here is only used to reference the frame height and format
-                {
-                    "Name": "PipelineOutput",
-                    "SlotType": "InputOutput"
                 }
             ],
             "Connections": [

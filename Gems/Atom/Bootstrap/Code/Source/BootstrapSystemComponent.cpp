@@ -139,6 +139,8 @@ AZ_CVAR(float, r_renderScale, 1.0f, cvar_r_renderScale_Changed, AZ::ConsoleFunct
 AZ_CVAR(AZ::CVarFixedString, r_antiAliasing, "", cvar_r_antiAliasing_Changed, AZ::ConsoleFunctorFlags::DontReplicate, "The anti-aliasing to be used for the current render pipeline. Available options: MSAA, TAA, SMAA");
 AZ_CVAR(uint16_t, r_multiSampleCount, 0, cvar_r_multiSample_Changed, AZ::ConsoleFunctorFlags::DontReplicate, "The multi-sample count to be used for the current render pipeline."); // 0 stands for unchanged, load the default setting from the pipeline itself
 
+AZ_CVAR(AZ::CVarFixedString, r_TR_skinning_shadows_pipeline_name, "passes/TRSkinningAndShadows.azasset", nullptr, AZ::ConsoleFunctorFlags::DontReplicate, "Skinning and Shadows Pipeline for TR Hair");
+
 namespace AZ
 {
     namespace Render
@@ -453,7 +455,7 @@ namespace AZ
                     // Run BRDF pipeline for the app in console mode, to use it in render-to-texture pipelines.
                     if (appType.IsConsoleMode())
                     {
-                        RunBRDFPipeline(m_defaultScene, nullptr);
+                        RunBRDFPipeline(m_defaultScene);
                     }
                 }
             }
@@ -590,6 +592,18 @@ namespace AZ
 
                 AZ::RHI::MultisampleState multisampleState;
 
+                {
+                    const AZStd::string_view TRSkinningShadowsPipeline = static_cast<AZ::CVarFixedString>(r_TR_skinning_shadows_pipeline_name);
+
+                    bool executeOnce = false;
+                    bool uniquePipeline = true;
+                    if (!AddNonWindowPipeline(scene, TRSkinningShadowsPipeline, executeOnce, uniquePipeline))
+                    {
+                        AZ_Error("AtomBootstrap", false, "Pipeline file failed to load from path: %s.", TRSkinningShadowsPipeline.data());
+                        return false;
+                    }
+                }
+
                 // Load the main default pipeline if applicable
                 if (loadDefaultRenderPipeline)
                 {
@@ -619,7 +633,7 @@ namespace AZ
                     }
                 }
 
-                RunBRDFPipeline(scene, viewportContext);
+                RunBRDFPipeline(scene);
 
                 // Load XR pipelines if applicable
                 if (xrSystem)
@@ -666,7 +680,7 @@ namespace AZ
                 return true;
             }
 
-            void BootstrapSystemComponent::RunBRDFPipeline(AZ::RPI::ScenePtr scene, AZ::RPI::ViewportContextPtr viewportContext)
+            void BootstrapSystemComponent::RunBRDFPipeline(AZ::RPI::ScenePtr scene)
             {
                 // As part of our initialization we need to create the BRDF texture generation pipeline
 
@@ -674,7 +688,6 @@ namespace AZ
                 // and it's ref count goes to zero
                 if (!m_brdfTexture)
                 {
-
                     const AZStd::shared_ptr<const RPI::PassTemplate> brdfTextureTemplate =
                         RPI::PassSystemInterface::Get()->GetPassTemplate(Name("BRDFTextureTemplate"));
                     Data::Asset<RPI::AttachmentImageAsset> brdfImageAsset = RPI::AssetUtils::LoadAssetById<RPI::AttachmentImageAsset>(
@@ -685,22 +698,67 @@ namespace AZ
                     }
                 }
 
+                AddNonWindowPipeline(scene, "BRDFTexturePipeline", "BRDFTexturePipeline", true, true);
+            }
+
+            bool BootstrapSystemComponent::AddNonWindowPipeline(AZ::RPI::ScenePtr scene, AZStd::string_view pipelineAssetName, bool executeOnce, bool uniquePipeline)
+            {
+                Data::Asset<RPI::AnyAsset> pipelineAsset =
+                    RPI::AssetUtils::LoadCriticalAsset<RPI::AnyAsset>(pipelineAssetName.data(), RPI::AssetUtils::TraceLevel::Error);
+                if (pipelineAsset)
+                {
+                    RPI::RenderPipelineDescriptor pipelineDesc =
+                        *RPI::GetDataFromAnyAsset<RPI::RenderPipelineDescriptor>(pipelineAsset); // Copy descriptor from asset
+                    pipelineAsset.Release();
+                    pipelineDesc.m_executeOnce = executeOnce;
+
+                    return AddNonWindowPipeline(scene, pipelineDesc, uniquePipeline);
+                }
+                else
+                {
+                    AZ_Error("AtomBootstrap", false, "Pipeline file failed to load from path: %s.", pipelineAssetName.data());
+                    return false;
+                }
+            }
+
+            bool BootstrapSystemComponent::AddNonWindowPipeline(AZ::RPI::ScenePtr scene, AZStd::string_view pipelineName, AZStd::string_view pipelinePassTemplate, bool executeOnce, bool uniquePipeline)
+            {
                 AZ::RPI::RenderPipelineDescriptor pipelineDesc;
                 pipelineDesc.m_mainViewTagName = "MainCamera";
-                pipelineDesc.m_rootPassTemplate = "BRDFTexturePipeline";
-                pipelineDesc.m_executeOnce = true;
-                const AzFramework::ViewportId viewportId = viewportContext ? viewportContext->GetId() : AzFramework::InvalidViewportId;
-                for (int deviceIndex{ 0 }; deviceIndex < RHI::RHISystemInterface::Get()->GetDeviceCount(); ++deviceIndex)
-                {
-                    pipelineDesc.m_name = AZStd::string::format("BRDFTexturePipeline_%d_%d", viewportId, deviceIndex);
+                pipelineDesc.m_name = pipelineName;
+                pipelineDesc.m_rootPassTemplate = pipelinePassTemplate;
+                pipelineDesc.m_executeOnce = executeOnce;
 
-                    if (!scene->GetRenderPipeline(AZ::Name(pipelineDesc.m_name)))
+                return AddNonWindowPipeline(scene, pipelineDesc, uniquePipeline);
+            }
+
+            bool BootstrapSystemComponent::AddNonWindowPipeline(AZ::RPI::ScenePtr scene, RPI::RenderPipelineDescriptor pipelineDesc, bool uniquePipeline)
+            {
+                if (uniquePipeline)
+                {
+                    return AddNonWindowPipeline(scene, pipelineDesc, 0);
+                }
+                else
+                {
+                    bool success = true;
+                    for (int deviceIndex{ 0 }; deviceIndex < RHI::RHISystemInterface::Get()->GetDeviceCount(); ++deviceIndex)
                     {
-                        RPI::RenderPipelinePtr brdfTexturePipeline = AZ::RPI::RenderPipeline::CreateRenderPipeline(pipelineDesc);
-                        brdfTexturePipeline->GetRootPass()->SetDeviceIndex(deviceIndex);
-                        scene->AddRenderPipeline(brdfTexturePipeline);
+                        pipelineDesc.m_name = AZStd::string::format("%s_%d", pipelineDesc.m_name.c_str(), deviceIndex);
+                        success = success && AddNonWindowPipeline(scene, pipelineDesc, deviceIndex);
                     }
                 }
+            }
+
+            bool BootstrapSystemComponent::AddNonWindowPipeline(AZ::RPI::ScenePtr scene, RPI::RenderPipelineDescriptor pipelineDesc, int deviceIndex)
+            {
+                if (!scene->GetRenderPipeline(AZ::Name(pipelineDesc.m_name)))
+                {
+                    RPI::RenderPipelinePtr pipeline = AZ::RPI::RenderPipeline::CreateRenderPipeline(pipelineDesc);
+                    pipeline->GetRootPass()->SetDeviceIndex(deviceIndex);
+                    scene->AddRenderPipeline(pipeline);
+                    return true;
+                }
+                return false;
             }
 
             void BootstrapSystemComponent::SwitchRenderPipeline(const AZ::RPI::RenderPipelineDescriptor& newRenderPipelineDesc, AZ::RPI::ViewportContextPtr viewportContext)

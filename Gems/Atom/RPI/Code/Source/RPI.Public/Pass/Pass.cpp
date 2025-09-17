@@ -568,18 +568,27 @@ namespace AZ
 
             // -- Search Parent & Siblings --
 
+            ParentPass* parent = m_parent;
+
+            // If this pass has no parent and is the root of the pipeline, use the root of the pass system as parent
+            // to connec to other pipelines 
+            if(!parent && m_flags.m_isPipelineRoot && !m_flags.m_partOfHierarchy)
+            {
+                parent = PassSystemInterface::Get()->GetRootPass().get();
+            }
+
             // The (connectedPassName != m_name) avoids edge case where parent pass has child pass of same name.
             // In this case, parent pass would ask it's parent pass for a sibling with the given name and get a pointer to itself.
             // It would then try to connect to itself, which is obviously not the intention of the user
-            if (!foundPass && m_parent && connectedPassName != m_name)
+            if (!foundPass && parent && connectedPassName != m_name)
             {
                 if (connectedPassName == PassNameParent)
                 {
                     foundPass = true;
-                    connectedBinding = m_parent->FindAttachmentBinding(connectedSlotName);
+                    connectedBinding = parent->FindAttachmentBinding(connectedSlotName);
                     if (!connectedBinding)
                     {
-                        attachment = m_parent->FindOwnedAttachment(connectedSlotName);
+                        attachment = parent->FindOwnedAttachment(connectedSlotName);
                     }
                     else
                     {
@@ -591,7 +600,7 @@ namespace AZ
                 else
                 {
                     // Use the connection Name to find a sibling pass
-                    Ptr<Pass> siblingPass = m_parent->FindChildPass(connectedPassName);
+                    Ptr<Pass> siblingPass = parent->FindChildPass(connectedPassName);
                     if (siblingPass)
                     {
                         foundPass = true;
